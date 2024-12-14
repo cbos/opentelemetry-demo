@@ -426,6 +426,22 @@ services:
         condition: service_started
     logging: *logging
 
+  messagequeue:
+    image: ${MESSAGE_QUEUE_IMAGE}
+    container_name: messagequeue
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+    restart: unless-stopped
+    environment:
+      - MESSAGE_QUEUE_USER
+      - MESSAGE_QUEUE_PASSWORD
+    ports:
+      - "${MESSAGE_QUEUE_PORT}"
+      - "${MESSAGE_QUEUE_HTTP_PORT}"
+    logging: *logging
+
   # Payment service
   paymentservice:
     image: ${IMAGE_NAME}:${DEMO_VERSION}-paymentservice
