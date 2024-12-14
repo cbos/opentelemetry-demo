@@ -51,7 +51,8 @@ dependencies {
                 "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations",
                 "org.apache.logging.log4j:log4j-core:2.23.1",
                 "dev.openfeature.contrib.providers:flagd:0.8.4",
-                'dev.openfeature:sdk:1.9.0'
+                'dev.openfeature:sdk:1.9.0',
+                'org.apache.activemq:artemis-jakarta-client-all:2.38.0'
 
         runtimeOnly "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
                 "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
