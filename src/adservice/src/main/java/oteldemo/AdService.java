@@ -12,7 +12,6 @@ import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.protobuf.services.*;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -37,16 +36,14 @@ import org.apache.logging.log4j.Logger;
 import oteldemo.Demo.Ad;
 import oteldemo.Demo.AdRequest;
 import oteldemo.Demo.AdResponse;
-import oteldemo.broker.BrokerConnector;
+import oteldemo.analytics.AnalyticsConnector;
 import oteldemo.problempattern.GarbageCollectionTrigger;
 import oteldemo.problempattern.CPULoad;
 import dev.openfeature.contrib.providers.flagd.FlagdOptions;
 import dev.openfeature.contrib.providers.flagd.FlagdProvider;
 import dev.openfeature.sdk.Client;
-import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.OpenFeatureAPI;
-import java.util.UUID;
 
 
 public final class AdService {
@@ -169,8 +166,6 @@ public final class AdService {
           logger.info("no baggage found in context");
         }
 
-        new BrokerConnector().requestAd();
-
         CPULoad cpuload = CPULoad.getInstance();
         cpuload.execute(ffClient.getBooleanValue(ADSERVICE_HIGH_CPU_FEATURE_FLAG, false, evaluationContext));
 
@@ -198,6 +193,8 @@ public final class AdService {
         span.setAttribute("app.ads.count", allAds.size());
         span.setAttribute("app.ads.ad_request_type", adRequestType.name());
         span.setAttribute("app.ads.ad_response_type", adResponseType.name());
+
+        AnalyticsConnector.getInstance().requestAd(req.getContextKeysList(), allAds, adRequestType.name(), adResponseType.name());
 
         adRequestsCounter.add(
             1,
@@ -270,6 +267,7 @@ public final class AdService {
   private void blockUntilShutdown() throws InterruptedException {
     if (server != null) {
       server.awaitTermination();
+      AnalyticsConnector.getInstance().close();
     }
   }
 

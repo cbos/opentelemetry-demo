@@ -8,9 +8,13 @@ package oteldemo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import oteldemo.broker.MessageHandler;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public final class Analytics {
@@ -19,11 +23,13 @@ public final class Analytics {
 
 
   private static final CountDownLatch stopLatch = new CountDownLatch(1);
-
+  private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   private void start() throws IOException {
 
+    executorService.execute(MessageHandler.getInstance().handleMessageRunnable());
     logger.info("Analytics service started");
+
     Runtime.getRuntime()
         .addShutdownHook(
             new Thread(
@@ -38,6 +44,8 @@ public final class Analytics {
   }
 
   private void stop() {
+    MessageHandler.getInstance().close();
+    executorService.shutdownNow();
     stopLatch.countDown();
   }
 

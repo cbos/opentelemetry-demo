@@ -84,6 +84,40 @@ services:
         condition: service_started
     logging: *logging
 
+  # Analytics service
+  analytics:
+    image: ${IMAGE_NAME}:${DEMO_VERSION}-analytics
+    container_name: analytics
+    build:
+      context: ./
+      dockerfile: ${ANALYTICS_DOCKERFILE}
+      cache_from:
+        - ${IMAGE_NAME}:${IMAGE_VERSION}-analytics
+      args:
+        OTEL_JAVA_AGENT_VERSION: ${OTEL_JAVA_AGENT_VERSION}
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    restart: unless-stopped
+    environment:
+      - MESSAGE_QUEUE_HOST
+      - MESSAGE_QUEUE_PORT
+      - MESSAGE_QUEUE_USER
+      - MESSAGE_QUEUE_PASSWORD
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://${OTEL_COLLECTOR_HOST}:${OTEL_COLLECTOR_PORT_HTTP}
+      - OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+      - OTEL_RESOURCE_ATTRIBUTES
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_SERVICE_NAME=analytics
+    depends_on:
+      messagequeue:
+        condition: service_started
+      otelcol:
+        condition: service_started
+    logging: *logging
+
+
   # Cart service
   cartservice:
     image: ${IMAGE_NAME}:${DEMO_VERSION}-cartservice
@@ -444,8 +478,8 @@ services:
       - MESSAGE_QUEUE_USER
       - MESSAGE_QUEUE_PASSWORD
     ports:
-      - "${MESSAGE_QUEUE_PORT}"
-      - "${MESSAGE_QUEUE_HTTP_PORT}"
+      - "${MESSAGE_QUEUE_PORT}:${MESSAGE_QUEUE_PORT}"
+      - "${MESSAGE_QUEUE_HTTP_PORT}:${MESSAGE_QUEUE_HTTP_PORT}"
     logging: *logging
 
   # Payment service
